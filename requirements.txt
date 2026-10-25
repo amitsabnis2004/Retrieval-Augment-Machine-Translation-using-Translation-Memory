@@ -1,0 +1,23 @@
+# Core Deep Learning & NLP
+torch
+transformers
+sentence-transformers
+datasets
+pandas
+pyarrow
+
+# Retrieval & Vector Database
+faiss-cpu
+rank-bm25
+
+# Evaluation
+sacrebleu
+evaluate
+
+# Jupyter & Interactive Prototyping
+ipykernel
+
+# API & Web Interface
+fastapi
+uvicorn
+streamlit

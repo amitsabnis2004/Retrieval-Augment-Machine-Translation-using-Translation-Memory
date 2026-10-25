@@ -1,0 +1,82 @@
+@startuml
+title RAMT - Complete System Architecture
+left to right direction
+skinparam componentStyle rectangle
+
+actor "End User" as User
+
+package "Client Layer" {
+  [Next.js Frontend] as UI
+}
+
+package "Application Layer" {
+  [FastAPI RAMT API] as API
+  [Input Normalizer\nText Cleaning + Unicode NFC] as Norm
+  [Retrieval Filter\nThreshold + Top-k Ranking] as Filter
+  [Context Builder\nEntity Protection + Context Formatting] as Context
+  [Output Postprocessor\nDetokenization + Script Restoration] as Post
+}
+
+package "Semantic Retrieval Layer" {
+  [LaBSE Encoder\n768-dimensional Embeddings] as LaBSE
+  [FAISS ANN Search\nHNSW / Similarity Search] as FAISS
+  database "Translation Memory DB\nSQLite OR PostgreSQL" as TMDB
+}
+
+package "Translation Layer" {
+  [IndicNLP\nNormalization + Script Mapping] as IndicNLP
+  [SentencePiece Tokenizer] as Tokenizer
+  [IndicTrans2\nTransformer Encoder-Decoder] as MT
+  [LoRA Adapter\nOptional if trained] as LoRA
+}
+
+package "Offline Indexing" {
+  [Parallel Corpus Loader] as Loader
+  [Corpus Cleaning + Deduplication] as Clean
+  [Metadata Assignment] as Metadata
+}
+
+User --> UI
+UI --> API : Submit source sentence
+API --> Norm : Normalize input
+Norm --> LaBSE : Clean source sentence
+LaBSE --> FAISS : Query embedding
+FAISS --> API : Candidate IDs + scores
+API --> TMDB : Fetch candidate sentence pairs
+TMDB --> API : Source/target pairs + metadata
+API --> Filter : Candidates + similarity scores
+
+Filter --> Context : Accepted top-k examples
+Filter --> Context : Empty context on fallback
+API --> Context : Original input sentence
+
+Context --> IndicNLP : Prepared input + context
+IndicNLP --> Tokenizer : Normalized/script-mapped text
+Tokenizer --> MT : Token IDs + target language tag
+LoRA ..> MT : Optional trained adaptation
+MT --> Post : Generated target tokens
+Post --> API : Final native-script translation
+API --> UI : Translation + retrieved examples
+UI --> User : Display result
+
+Loader --> Clean
+Clean --> Metadata
+Metadata --> TMDB : Store bilingual pairs + metadata
+Metadata --> LaBSE : Source-side sentences
+LaBSE --> FAISS : Normalized embeddings
+Loader --> FAISS : Build/update persistent index
+
+note right of Filter
+Initial similarity threshold: 0.75
+Tune on validation data.
+If no match is accepted,
+use the baseline translation path.
+end note
+
+note bottom of TMDB
+Store vector-ID mapping so
+FAISS results can be resolved
+to the original bilingual pair.
+end note
+
+@enduml

@@ -1,0 +1,28 @@
+@startuml
+title Offline Translation Memory Indexing
+skinparam shadowing false
+
+start
+
+:Load bilingual parallel corpus;
+note right
+Candidate sources from the project plan:
+Samanantar, BPCC, FLORES-200
+end note
+
+:Clean text and normalize Unicode;
+:Remove duplicate and invalid pairs;
+:Assign record IDs and domain metadata;
+
+:Store source-target pairs
+and metadata in the TM database;
+
+:Encode source sentences using LaBSE;
+:L2-normalize sentence embeddings;
+:Build or update the FAISS ANN index;
+:Persist vector IDs and FAISS index;
+
+:Validate database/index ID mapping;
+
+stop
+@enduml

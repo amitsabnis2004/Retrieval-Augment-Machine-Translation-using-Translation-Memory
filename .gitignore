@@ -1,0 +1,30 @@
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python cache & artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.ipynb_checkpoints/
+
+# Data & Model weights (prevent committing large files)
+data/raw/
+data/processed/
+data/tm_store/*.index
+*.pt
+*.bin
+*.onnx
+
+# Environment & IDE
+.env
+.vscode/
+.idea/
+
+#initial
+explore_*.ipynb
+test_*.py
+docs/papers
+docs/review*

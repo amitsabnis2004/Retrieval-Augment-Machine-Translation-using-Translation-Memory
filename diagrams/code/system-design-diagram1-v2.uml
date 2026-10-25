@@ -1,0 +1,71 @@
+
+@startuml
+title RAMT - System Architecture (English to Kannada)
+
+top to bottom direction
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam nodesep 18
+skinparam ranksep 22
+
+actor User
+
+package "Frontend" {
+  [Next.js UI] as UI
+}
+
+package "Backend - FastAPI" {
+  [Input Normalizer] as Norm
+  [Retrieval Filter] as Filter
+  [Context Builder] as Context
+  [Output Postprocessor] as Post
+}
+
+package "Retrieval Layer" {
+  [LaBSE Encoder] as LaBSE
+  [FAISS Vector Search] as FAISS
+  database "Translation Memory\nSQLite / PostgreSQL" as TMDB
+}
+
+package "Translation Layer" {
+  [IndicNLP\nScript Processing] as IndicNLP
+  [SentencePiece Tokenizer] as Tok
+  [IndicTrans2\nTransformer Model] as MT
+}
+
+package "Offline Indexing" {
+  [Parallel Corpus] as Corpus
+  [Cleaning + Deduplication] as Clean
+  [Metadata + Embeddings] as Embed
+}
+
+User --> UI
+UI --> Norm : Source sentence
+Norm --> LaBSE : Encode query
+LaBSE --> FAISS : Query vector
+FAISS --> Filter : Candidate IDs + scores
+Filter --> TMDB : Fetch candidate pairs
+TMDB --> Filter : Bilingual examples
+Filter --> Context : Top-k matches\nor empty context
+Norm --> Context : Original input
+Context --> IndicNLP
+IndicNLP --> Tok
+Tok --> MT : Token IDs + target tag
+MT --> Post : Generated tokens
+Post --> UI : Kannada translation
+UI --> User : Display result
+
+Corpus --> Clean
+Clean --> Embed
+Embed --> TMDB : Store bilingual pairs
+Embed --> FAISS : Build vector index
+
+note right of Filter
+Threshold: 0.75 initially
+Tune using validation data.
+No valid match = baseline fallback.
+end note
+
+@enduml

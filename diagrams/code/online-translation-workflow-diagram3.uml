@@ -1,0 +1,39 @@
+@startuml
+title Online Retrieval-Augmented Translation Workflow
+skinparam shadowing false
+
+start
+
+:User enters an English sentence;
+:Normalize text and protect input format;
+:Generate query embedding using LaBSE;
+:Search the FAISS ANN index;
+:Fetch candidate bilingual pairs from TM DB;
+:Rank candidates and check similarity threshold;
+
+if (Any candidate passes\ninitial threshold 0.75?) then (Yes)
+  :Select top-k accepted matches;
+  :Build context from bilingual examples;
+else (No)
+  :Use empty retrieved context;
+  :Enable baseline translation fallback;
+endif
+
+:Preserve named entities, numbers and dates;
+:Compose input and retrieval context;
+:Apply IndicNLP preprocessing;
+:Perform planned script unification;
+:Tokenize using SentencePiece;
+:Add target language tag;
+
+:Generate target sequence with IndicTrans2;
+
+:Restore native script;
+:Detokenize output;
+:Restore protected entities;
+
+:Return final translation;
+:Display translation and retrieved examples;
+
+stop
+@enduml
