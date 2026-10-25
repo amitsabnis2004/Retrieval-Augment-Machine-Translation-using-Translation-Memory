@@ -1,0 +1,54 @@
+@startuml
+title RAMT - Translation Request Sequence
+autonumber
+
+actor User
+participant "Streamlit UI" as UI
+participant "FastAPI RAMT API" as API
+participant "Text Normalizer" as Norm
+participant "LaBSE Encoder" as LaBSE
+database "FAISS Index" as FAISS
+database "Translation Memory DB" as TMDB
+participant "Context Builder" as Context
+participant "IndicNLP + SentencePiece" as Prep
+participant "IndicTrans2" as MT
+participant "Output Postprocessor" as Post
+
+User -> UI : Enter English sentence
+UI -> API : Submit translation request
+API -> Norm : Clean and normalize text
+Norm --> API : Normalized sentence
+
+API -> LaBSE : Encode normalized sentence
+LaBSE --> API : Query vector
+
+API -> FAISS : Search nearest vectors
+FAISS --> API : Candidate IDs + similarity scores
+
+API -> TMDB : Fetch candidate bilingual pairs
+TMDB --> API : Candidate pairs + metadata
+
+alt At least one candidate passes threshold
+  API -> Context : Supply accepted top-k examples
+  Context --> API : Prepared retrieval context
+else No candidate passes threshold
+  API -> Context : Supply empty context
+  Context --> API : Baseline fallback context
+end
+
+API -> Context : Compose input and protect entities
+Context --> API : Prepared source + context
+
+API -> Prep : Normalize, map scripts and tokenize
+Prep --> API : Model-ready input
+
+API -> MT : Generate target-language sequence
+MT --> API : Generated target tokens
+
+API -> Post : Restore script and entities
+Post --> API : Final translation
+
+API --> UI : Translation + retrieval information
+UI --> User : Display result
+
+@enduml

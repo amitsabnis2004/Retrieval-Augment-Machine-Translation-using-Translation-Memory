@@ -1,0 +1,56 @@
+@startuml
+title RAMT - Entity Relationship Diagram
+hide circle
+skinparam linetype ortho
+
+entity "TRANSLATION_MEMORY_ENTRY" as TM {
+  * id : UUID <<PK>>
+  --
+  faiss_vector_id : INTEGER <<UNIQUE>>
+  source_text : TEXT
+  target_text : TEXT
+  source_lang : VARCHAR
+  target_lang : VARCHAR
+  domain : VARCHAR
+  corpus_source : VARCHAR
+  created_at : TIMESTAMP
+}
+
+entity "TRANSLATION_REQUEST" as Request {
+  * request_id : UUID <<PK>>
+  --
+  source_text : TEXT
+  source_lang : VARCHAR
+  target_lang : VARCHAR
+  created_at : TIMESTAMP
+  baseline_output : TEXT
+  ramt_output : TEXT
+  retrieval_used : BOOLEAN
+}
+
+entity "RETRIEVAL_MATCH" as Match {
+  * request_id : UUID <<FK>>
+  * tm_entry_id : UUID <<FK>>
+  --
+  rank_no : INTEGER
+  similarity_score : FLOAT
+  accepted : BOOLEAN
+}
+
+entity "EVALUATION_RESULT" as Evaluation {
+  * evaluation_id : UUID <<PK>>
+  --
+  request_id : UUID <<FK>>
+  bleu_score : FLOAT
+  meteor_score : FLOAT
+  chrf_score : FLOAT
+  bertscore : FLOAT
+  human_fluency : SMALLINT
+  human_adequacy : SMALLINT
+}
+
+Request ||--o{ Match : produces
+TM ||--o{ Match : retrieved as
+Request ||--o| Evaluation : evaluated by
+
+@enduml

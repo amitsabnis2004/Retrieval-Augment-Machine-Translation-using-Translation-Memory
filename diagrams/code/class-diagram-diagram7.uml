@@ -1,0 +1,97 @@
+@startuml
+title RAMT - UML Class Diagram
+skinparam classAttributeIconSize 0
+
+class TranslationController {
+  +translate(request : TranslationRequest) : TranslationResponse
+}
+
+class TranslationRequest {
+  +requestId : String
+  +sourceText : String
+  +sourceLanguage : String
+  +targetLanguage : String
+}
+
+class TranslationResponse {
+  +translatedText : String
+  +usedRetrieval : Boolean
+  +retrievedMatches : List
+}
+
+class TranslationMemoryEntry {
+  +id : String
+  +sourceText : String
+  +targetText : String
+  +domain : String
+  +vectorId : Integer
+}
+
+class RetrievalMatch {
+  +entry : TranslationMemoryEntry
+  +similarityScore : Float
+  +rank : Integer
+  +accepted : Boolean
+}
+
+class EmbeddingService {
+  +encode(text : String) : Vector
+  +encodeBatch(texts : List) : List
+}
+
+class SemanticRetriever {
+  +search(vector : Vector) : List
+  +filterByThreshold(matches : List) : List
+}
+
+class TranslationMemoryRepository {
+  +getByVectorIds(ids : List) : List
+  +insertEntries(entries : List) : void
+}
+
+class ContextBuilder {
+  +buildContext(matches : List) : String
+  +protectEntities(text : String) : String
+}
+
+class TranslationService {
+  +translate(request : TranslationRequest) : TranslationResponse
+  +translateBaseline(text : String) : String
+}
+
+class OutputPostprocessor {
+  +restoreScript(text : String) : String
+  +restoreEntities(text : String) : String
+}
+
+class EvaluationService {
+  +calculateMetrics(reference : String, output : String) : Metrics
+}
+
+class Metrics {
+  +bleu : Float
+  +meteor : Float
+  +chrf : Float
+  +bertscore : Float
+}
+
+TranslationController --> TranslationService
+TranslationController --> TranslationRequest
+TranslationController --> TranslationResponse
+
+TranslationService --> SemanticRetriever
+TranslationService --> ContextBuilder
+TranslationService --> OutputPostprocessor
+TranslationService --> TranslationMemoryRepository
+
+SemanticRetriever --> EmbeddingService
+SemanticRetriever --> TranslationMemoryRepository
+
+TranslationMemoryRepository "1" o-- "0..*" TranslationMemoryEntry
+TranslationResponse "1" o-- "0..*" RetrievalMatch
+RetrievalMatch "*" --> "1" TranslationMemoryEntry
+
+EvaluationService ..> TranslationResponse
+EvaluationService ..> Metrics
+
+@enduml

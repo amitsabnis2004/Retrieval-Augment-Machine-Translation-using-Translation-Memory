@@ -1,0 +1,30 @@
+@startuml
+title RAMT - Use Case Diagram
+left to right direction
+
+actor "End User" as User
+actor "Corpus Administrator" as Admin
+actor "Project Evaluator" as Evaluator
+
+rectangle "Retrieval-Augmented Machine Translation System" {
+  usecase "Submit English Sentence" as UC1
+  usecase "Receive Translation" as UC2
+  usecase "View Retrieved Examples" as UC3
+  usecase "Maintain Bilingual Corpus" as UC4
+  usecase "Build / Update FAISS Index" as UC5
+  usecase "Run Baseline vs RAMT Evaluation" as UC6
+  usecase "Calculate Translation Metrics" as UC7
+}
+
+User --> UC1
+User --> UC2
+User --> UC3
+
+Admin --> UC4
+Admin --> UC5
+UC4 .> UC5 : <<include>>
+
+Evaluator --> UC6
+UC6 .> UC7 : <<include>>
+
+@enduml

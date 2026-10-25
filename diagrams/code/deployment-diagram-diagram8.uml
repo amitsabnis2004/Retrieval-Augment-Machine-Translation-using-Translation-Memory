@@ -1,0 +1,35 @@
+@startuml
+title RAMT - Deployment Diagram
+left to right direction
+
+node "User Device" as Client {
+  artifact "Web Browser" as Browser
+}
+
+node "Application Host" as AppHost {
+  artifact "Next.js Frontend" as UI
+  artifact "FastAPI Service" as API
+  artifact "RAMT Orchestrator" as Orchestrator
+}
+
+node "ML Runtime" as MLHost {
+  artifact "LaBSE Model Weights" as LaBSE
+  artifact "IndicTrans2 Model Weights" as MT
+  artifact "IndicNLP + SentencePiece" as NLP
+}
+
+node "Persistent Storage" as Storage {
+  database "Translation Memory DB\nSQLite or PostgreSQL" as TMDB
+  artifact "FAISS Vector Index Files" as FAISS
+}
+
+Browser --> UI : HTTPS / browser access
+UI --> API : HTTP API request
+API --> Orchestrator
+Orchestrator --> LaBSE : Generate embeddings
+Orchestrator --> FAISS : Vector search
+Orchestrator --> TMDB : Fetch sentence pairs
+Orchestrator --> MT : Generate translation
+Orchestrator --> NLP : Normalize / tokenize
+
+@enduml
